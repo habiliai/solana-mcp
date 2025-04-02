@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-import { ACTIONS, SolanaAgentKit, startMcpServer } from "solana-agent-kit";
+import {Action, ACTIONS, SolanaAgentKit} from "solana-agent-kit";
+import {startMcpServer} from "./mcp.js";
+import {zodToMCPShape} from "./utils/zodToMCPSchema.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -33,27 +35,29 @@ async function main() {
             {
                 OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
                 PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY || "",
+                COINGECKO_PRO_API_KEY: process.env.COINGECKO_PRO_API_KEY || "",
             },
         );
 
-        const mcp_actions = {
-            GET_ASSET: ACTIONS.GET_ASSET_ACTION,
-            DEPLOY_TOKEN: ACTIONS.DEPLOY_TOKEN_ACTION,
-            GET_PRICE: ACTIONS.FETCH_PRICE_ACTION,
-            WALLET_ADDRESS: ACTIONS.WALLET_ADDRESS_ACTION,
-            BALANCE: ACTIONS.BALANCE_ACTION,
-            TRANSFER: ACTIONS.TRANSFER_ACTION,
-            MINT_NFT: ACTIONS.MINT_NFT_ACTION,
-            TRADE: ACTIONS.TRADE_ACTION,
-            REQUEST_FUNDS: ACTIONS.REQUEST_FUNDS_ACTION,
-            RESOLVE_DOMAIN: ACTIONS.RESOLVE_DOMAIN_ACTION,
-            GET_TPS: ACTIONS.GET_TPS_ACTION,
-        };
+        const mcpActions: Record<string, Action> = {};
+
+        for (const [key, action] of Object.entries(ACTIONS)) {
+            if (action.schema) {
+                // Validate the action schema
+                try {
+                    zodToMCPShape(action.schema)
+                } catch (error) {
+                    console.error(`Error in action schema for ${key}`);
+                    continue;
+                }
+            }
+            mcpActions[action.name] = action;
+        }
 
         // Start the MCP server with error handling
-        await startMcpServer(mcp_actions, agent, { 
-            name: "solana-agent", 
-            version: "0.0.1" 
+        await startMcpServer(mcpActions, agent, {
+            name: "solana-agent",
+            version: "0.1.0"
         });
     } catch (error) {
         console.error('Failed to start MCP server:', error instanceof Error ? error.message : String(error));
