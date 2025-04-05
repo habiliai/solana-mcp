@@ -42,6 +42,10 @@ async function main() {
         const mcpActions: Record<string, Action> = {};
 
         for (const [key, action] of Object.entries(ACTIONS)) {
+            if (action.name === ACTIONS.OPEN_ORCA_CENTERED_POSITION_WITH_LIQUIDITY_ACTION.name) {
+                action.name = 'OPEN_ORCA_POSITION_WITH_LIQUIDITY';
+            }
+
             if (action.schema) {
                 // Validate the action schema
                 try {
