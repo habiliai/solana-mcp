@@ -4,6 +4,7 @@ import {Action, ACTIONS, SolanaAgentKit} from "solana-agent-kit";
 import {startMcpServer} from "./mcp.js";
 import {zodToMCPShape} from "./utils/zodToMCPSchema.js";
 import * as dotenv from "dotenv";
+import {topListPools} from "./actions/list_top_pools.js";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ async function main() {
             }
             mcpActions[action.name] = action;
         }
+        mcpActions[topListPools.name] = topListPools;
 
         // Start the MCP server with error handling
         await startMcpServer(mcpActions, agent, {
